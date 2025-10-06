@@ -1,7 +1,14 @@
 export function getApiKey(): string | null {
   try {
-    if (typeof window === "undefined") return null;
-    return window.localStorage.getItem("lg:chat:apiKey") ?? null;
+    // First try to get from environment variable (server-side)
+    if (process.env.LANGSMITH_API_KEY) {
+      return process.env.LANGSMITH_API_KEY;
+    }
+    
+    // Then try localStorage (client-side fallback)
+    if (typeof window !== "undefined") {
+      return window.localStorage.getItem("lg:chat:apiKey") ?? null;
+    }
   } catch {
     // no-op
   }
