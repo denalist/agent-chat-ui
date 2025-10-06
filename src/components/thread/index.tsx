@@ -45,6 +45,7 @@ import {
   ArtifactTitle,
   useArtifactContext,
 } from "./artifact";
+import { UserMenu } from "../auth/UserMenu";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -374,6 +375,7 @@ export function Thread() {
                 <div className="flex items-center">
                   <OpenGitHubRepo />
                 </div>
+                <UserMenu />
                 <TooltipIconButton
                   size="lg"
                   className="p-4"
