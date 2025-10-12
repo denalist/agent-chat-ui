@@ -1,8 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, {
   createContext,
   useContext,
   ReactNode,
-  useState,
   useEffect,
 } from "react";
 import { useStream } from "@langchain/langgraph-sdk/react";
@@ -20,8 +20,6 @@ import { Button } from "@/components/ui/button";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
 import { Label } from "@/components/ui/label";
 import { ArrowRight } from "lucide-react";
-import { PasswordInput } from "@/components/ui/password-input";
-import { getApiKey } from "@/lib/api-key";
 import { useThreads } from "./Thread";
 import { toast } from "sonner";
 
@@ -46,17 +44,9 @@ async function sleep(ms = 4000) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function checkGraphStatus(
-  apiUrl: string,
-  apiKey: string | null,
-): Promise<boolean> {
+async function checkGraphStatus(apiUrl: string): Promise<boolean> {
   try {
     const res = await fetch(`${apiUrl}/info`, {
-      ...(apiKey && {
-        headers: {
-          "X-Api-Key": apiKey,
-        },
-      }),
     });
 
     return res.ok;
@@ -68,12 +58,10 @@ async function checkGraphStatus(
 
 const StreamSession = ({
   children,
-  apiKey,
   apiUrl,
   assistantId,
 }: {
   children: ReactNode;
-  apiKey: string | null;
   apiUrl: string;
   assistantId: string;
 }) => {
@@ -81,7 +69,6 @@ const StreamSession = ({
   const { getThreads, setThreads } = useThreads();
   const streamValue = useTypedStream({
     apiUrl,
-    apiKey: apiKey ?? undefined,
     assistantId,
     threadId: threadId ?? null,
     fetchStateHistory: true,
@@ -102,13 +89,13 @@ const StreamSession = ({
   });
 
   useEffect(() => {
-    checkGraphStatus(apiUrl, apiKey).then((ok) => {
+    checkGraphStatus(apiUrl).then((ok) => {
       if (!ok) {
         toast.error("Failed to connect to LangGraph server", {
           description: () => (
             <p>
               Please ensure your graph is running at <code>{apiUrl}</code> and
-              your API key is correctly set (if connecting to a deployed graph).
+              the server-side API key is configured (if connecting to a deployed graph).
             </p>
           ),
           duration: 10000,
@@ -117,7 +104,7 @@ const StreamSession = ({
         });
       }
     });
-  }, [apiKey, apiUrl]);
+  }, [apiUrl]);
 
   return (
     <StreamContext.Provider value={streamValue}>
@@ -127,42 +114,55 @@ const StreamSession = ({
 };
 
 // Default values for the form
-const DEFAULT_API_URL = "http://localhost:2024";
+const DEFAULT_API_URL = "/api/langgraph";
 const DEFAULT_ASSISTANT_ID = "agent";
+
+const normalizeApiUrl = (input: string | null | undefined): string | null => {
+  if (!input) return null;
+  if (input === "remove-me") return null;
+
+  try {
+    // Absolute URL provided
+    return new URL(input).toString();
+  } catch {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    try {
+      return new URL(input, window.location.origin).toString();
+    } catch {
+      return null;
+    }
+  }
+};
+
+const normalizeAssistantId = (input: string | null | undefined): string | null =>
+  !input || input === "remove-me" ? null : input;
 
 export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   // Get environment variables
-  const envApiUrl: string | undefined = process.env.NEXT_PUBLIC_API_URL;
-  const envAssistantId: string | undefined =
-    process.env.NEXT_PUBLIC_ASSISTANT_ID;
+  const envApiUrl: string =
+    process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_URL;
+  const envAssistantId: string =
+    process.env.NEXT_PUBLIC_ASSISTANT_ID ?? DEFAULT_ASSISTANT_ID;
 
   // Use URL params with env var fallbacks
   const [apiUrl, setApiUrl] = useQueryState("apiUrl", {
-    defaultValue: envApiUrl || "",
+    defaultValue: envApiUrl,
   });
   const [assistantId, setAssistantId] = useQueryState("assistantId", {
-    defaultValue: envAssistantId || "",
+    defaultValue: envAssistantId,
   });
 
-  // For API key, use localStorage with env var fallback
-  const [apiKey, _setApiKey] = useState(() => {
-    const storedKey = getApiKey();
-    return storedKey || "";
-  });
-
-  const setApiKey = (key: string) => {
-    window.localStorage.setItem("lg:chat:apiKey", key);
-    _setApiKey(key);
-  };
-
-  // Determine final values to use, prioritizing URL params then env vars
   const finalApiUrl = apiUrl || envApiUrl;
   const finalAssistantId = assistantId || envAssistantId;
+  const normalizedApiUrl = normalizeApiUrl(finalApiUrl);
+  const normalizedAssistantId = normalizeAssistantId(finalAssistantId);
 
   // Show the form if we: don't have an API URL, or don't have an assistant ID
-  if (!finalApiUrl || !finalAssistantId) {
+  if (!normalizedApiUrl || !normalizedAssistantId) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center p-4">
         <div className="animate-in fade-in-0 zoom-in-95 bg-background flex max-w-3xl flex-col rounded-lg border shadow-lg">
@@ -186,10 +186,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
               const formData = new FormData(form);
               const apiUrl = formData.get("apiUrl") as string;
               const assistantId = formData.get("assistantId") as string;
-              const apiKey = formData.get("apiKey") as string;
 
               setApiUrl(apiUrl);
-              setApiKey(apiKey);
               setAssistantId(assistantId);
 
               form.reset();
@@ -208,7 +206,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
                 id="apiUrl"
                 name="apiUrl"
                 className="bg-background"
-                defaultValue={apiUrl || DEFAULT_API_URL}
+                defaultValue={finalApiUrl || DEFAULT_API_URL}
                 required
               />
             </div>
@@ -226,25 +224,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
                 id="assistantId"
                 name="assistantId"
                 className="bg-background"
-                defaultValue={assistantId || DEFAULT_ASSISTANT_ID}
+                defaultValue={finalAssistantId || DEFAULT_ASSISTANT_ID}
                 required
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="apiKey">LangSmith API Key</Label>
-              <p className="text-muted-foreground text-sm">
-                This is <strong>NOT</strong> required if using a local LangGraph
-                server. This value is stored in your browser's local storage and
-                is only used to authenticate requests sent to your LangGraph
-                server.
-              </p>
-              <PasswordInput
-                id="apiKey"
-                name="apiKey"
-                defaultValue={apiKey ?? ""}
-                className="bg-background"
-                placeholder="lsv2_pt_..."
               />
             </div>
 
@@ -265,9 +246,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
 
   return (
     <StreamSession
-      apiKey={apiKey}
-      apiUrl={apiUrl}
-      assistantId={assistantId}
+      apiUrl={normalizedApiUrl}
+      assistantId={normalizedAssistantId}
     >
       {children}
     </StreamSession>

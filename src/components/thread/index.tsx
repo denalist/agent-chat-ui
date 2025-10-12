@@ -46,6 +46,7 @@ import {
   useArtifactContext,
 } from "./artifact";
 import { UserMenu } from "../auth/UserMenu";
+import { useAuth } from "@/providers/Auth";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -142,6 +143,8 @@ export function Thread() {
   const stream = useStreamContext();
   const messages = stream.messages;
   const isLoading = stream.isLoading;
+  const { user } = useAuth();
+  const activeUserId = user?.userId || user?.username || user?.email || undefined;
 
   const lastError = useRef<string | undefined>(undefined);
 
@@ -221,6 +224,7 @@ export function Thread() {
         streamMode: ["values"],
         streamSubgraphs: true,
         streamResumable: true,
+        metadata: activeUserId ? { user_id: activeUserId } : undefined,
         optimisticValues: (prev) => ({
           ...prev,
           context,
@@ -248,6 +252,7 @@ export function Thread() {
       streamMode: ["values"],
       streamSubgraphs: true,
       streamResumable: true,
+      metadata: activeUserId ? { user_id: activeUserId } : undefined,
     });
   };
 
