@@ -1,4 +1,5 @@
-import { Amplify } from 'aws-amplify';
+import { Amplify } from "aws-amplify";
+import type { ResourcesConfig } from "aws-amplify";
 
 // Only run configuration on client side
 if (typeof window !== 'undefined') {
@@ -45,7 +46,7 @@ if (typeof window !== 'undefined') {
 
   // Only configure Amplify if we have the required variables
   if (missingVars.length === 0) {
-    Amplify.configure(amplifyConfig);
+    Amplify.configure(amplifyConfig as unknown as ResourcesConfig);
     console.log('AWS Amplify configured successfully on client side');
   } else {
     console.error('AWS Amplify configuration skipped due to missing environment variables');
