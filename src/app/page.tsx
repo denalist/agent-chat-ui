@@ -8,7 +8,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/providers/Auth";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import React from "react";
-import { headers } from "next/headers";
 
 export default function DemoPage(): React.ReactNode {
   return (
