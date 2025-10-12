@@ -82,7 +82,9 @@ function formatPrice(price?: number | string, currency?: string): string {
         maximumFractionDigits: 0,
       }).format(value as number);
     }
-  } catch {}
+  } catch {
+    return String(price);
+  }
   return String(price);
 }
 
@@ -125,7 +127,6 @@ function PropertyCard({
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
       {primaryImage ? (
         <div className="relative h-48 w-full overflow-hidden bg-gray-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={primaryImage}
             alt={title || address || "Property"}
@@ -365,7 +366,9 @@ export function ToolResult({ message }: { message: ToolMessage }) {
           }
         }
       }
-    } catch {}
+    } catch {
+      return null;
+    }
     return null;
   }
 
