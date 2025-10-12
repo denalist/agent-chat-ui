@@ -13,6 +13,10 @@ applications:
         baseDirectory: .
         files:
           - '**/*'
+          - '!node_modules/**'
+          - '!.next/**'
+          - '!out/**'
+          - '!.git/**'
       cache:
         paths:
           - node_modules/**/*
