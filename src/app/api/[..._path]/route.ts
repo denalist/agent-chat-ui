@@ -12,5 +12,5 @@ export const { GET, POST, PUT, PATCH, DELETE, OPTIONS, runtime } =
     apiUrl: process.env.LANGGRAPH_API_URL ?? "remove-me", // default, if not defined it will attempt to read process.env.LANGGRAPH_API_URL
     apiKey: process.env.LANGSMITH_API_KEY ?? "remove-me", // default, if not defined it will attempt to read process.env.LANGSMITH_API_KEY
     baseRoute: "langgraph",
-    runtime: "edge", // default
+    runtime: "nodejs",
   });
