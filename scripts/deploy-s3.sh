@@ -37,6 +37,23 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+ENV_FILE=""
+for candidate in ".env.production" ".env.local" ".env"; do
+  if [[ -z "$ENV_FILE" && -f "$candidate" ]]; then
+    ENV_FILE="$candidate"
+  fi
+done
+
+if [[ -n "$ENV_FILE" ]]; then
+  echo "Loading environment variables from $ENV_FILE"
+  set -a
+  # shellcheck source=/dev/null
+  source "$ENV_FILE"
+  set +a
+else
+  echo "No .env file found. Proceeding without loading environment overrides."
+fi
+
 echo "Building static export..."
 pnpm build
 
