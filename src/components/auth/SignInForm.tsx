@@ -24,7 +24,7 @@ export function SignInForm({ onSwitchToSignUp }: SignInFormProps) {
 
     try {
       await signIn(username, password);
-    } catch (err) {
+    } catch {
       // Error is handled by the auth context
     } finally {
       setIsLoading(false);

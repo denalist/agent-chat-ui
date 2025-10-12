@@ -25,7 +25,7 @@ export function ConfirmSignUpForm({ username, onBackToSignUp }: ConfirmSignUpFor
 
     try {
       await confirmSignUp(username, confirmationCode);
-    } catch (err) {
+    } catch {
       // Error is handled by the auth context
     } finally {
       setIsLoading(false);
@@ -38,7 +38,7 @@ export function ConfirmSignUpForm({ username, onBackToSignUp }: ConfirmSignUpFor
 
     try {
       await resendSignUpCode(username);
-    } catch (err) {
+    } catch {
       // Error is handled by the auth context
     } finally {
       setIsResending(false);

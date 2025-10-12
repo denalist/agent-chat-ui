@@ -35,7 +35,7 @@ export function SignUpForm({ onSwitchToSignIn, onSignUpSuccess }: SignUpFormProp
     try {
       await signUp(username, password, email, firstName, lastName);
       onSignUpSuccess(username);
-    } catch (err) {
+    } catch {
       // Error is handled by the auth context
     } finally {
       setIsLoading(false);

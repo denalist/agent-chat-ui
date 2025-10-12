@@ -1,5 +1,6 @@
 "use client";
 
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { signIn, signUp, signOut, getCurrentUser, confirmSignUp, resendSignUpCode } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
@@ -26,6 +27,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const resolveErrorMessage = (error: unknown, fallback: string): string => {
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+  if (typeof error === "string") {
+    return error || fallback;
+  }
+  return fallback;
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,16 +50,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       await signIn({ username, password });
-    } catch (err: any) {
-      setError(err.message || 'Sign in failed');
-      throw err;
+    } catch (error) {
+      const message = resolveErrorMessage(error, 'Sign in failed');
+      setError(message);
+      throw error;
     }
   };
 
   const handleSignUp = async (username: string, password: string, email: string, firstName?: string, lastName?: string) => {
     try {
       setError(null);
-      const userAttributes: any = {
+      const userAttributes: Record<string, string> = {
         email,
       };
       
@@ -74,9 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           userAttributes,
         },
       });
-    } catch (err: any) {
-      setError(err.message || 'Sign up failed');
-      throw err;
+    } catch (error) {
+      const message = resolveErrorMessage(error, 'Sign up failed');
+      setError(message);
+      throw error;
     }
   };
 
@@ -84,9 +97,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       await signOut();
-    } catch (err: any) {
-      setError(err.message || 'Sign out failed');
-      throw err;
+    } catch (error) {
+      const message = resolveErrorMessage(error, 'Sign out failed');
+      setError(message);
+      throw error;
     }
   };
 
@@ -94,9 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       await confirmSignUp({ username, confirmationCode });
-    } catch (err: any) {
-      setError(err.message || 'Confirmation failed');
-      throw err;
+    } catch (error) {
+      const message = resolveErrorMessage(error, 'Confirmation failed');
+      setError(message);
+      throw error;
     }
   };
 
@@ -104,9 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       await resendSignUpCode({ username });
-    } catch (err: any) {
-      setError(err.message || 'Failed to resend code');
-      throw err;
+    } catch (error) {
+      const message = resolveErrorMessage(error, 'Failed to resend code');
+      setError(message);
+      throw error;
     }
   };
 
@@ -119,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           username: currentUser.username,
           email: currentUser.signInDetails?.loginId,
         });
-      } catch (err) {
+      } catch {
         setUser(null);
       } finally {
         setIsLoading(false);
