@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-export const dynamic = "force-static";
+// Allow dynamic rendering for health check in Amplify
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {

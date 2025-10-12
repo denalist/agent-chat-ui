@@ -8,10 +8,20 @@ const nextConfig = (phase) => {
         bodySizeLimit: "10mb",
       },
     },
+    // Ensure proper handling of API routes in Amplify
+    trailingSlash: false,
+    // Disable static export for Amplify deployment
+    output: undefined,
   };
 
-  if (phase !== PHASE_DEVELOPMENT_SERVER) {
+  // Only enable static export for S3 deployment
+  const shouldExport =
+    process.env.NEXT_BUILD_TARGET === "static" ||
+    process.env.NEXT_OUTPUT === "export";
+
+  if (shouldExport) {
     config.output = "export";
+    config.trailingSlash = true;
   }
 
   return config;
